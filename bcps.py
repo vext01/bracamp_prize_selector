@@ -5,17 +5,17 @@ from random import *
 
 class uplink_text:
 
-    def make_mask(self):
-        m = ""
-        for i in range(self.width):
-            m = ("%s%c" % (m, chr(self.rng.randrange(33, 122))))
-        return m
-
     def __init__(self, text, width):
         self.rng = Random()
         self.width = width
         self.text = text.center(width)
         self.widget = urwid.Text("", align='center')
+
+    def make_mask(self):
+        m = ""
+        for i in range(self.width):
+            m = ("%s%c" % (m, chr(self.rng.randrange(33, 122))))
+        return m
 
     def update(self):
         mask = self.make_mask()
