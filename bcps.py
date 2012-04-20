@@ -7,7 +7,7 @@ import sys
 import time
 from random import *
 
-class uplink_text:
+class UplinkText:
 
     def __init__(self, text, width):
         self.rng = Random()
@@ -40,16 +40,16 @@ class uplink_text:
 def alarm_handler(loop, data):
     (selector, event, val) = data;
 
-    if event == event_type.JUMBLE:
+    if event == EventType.JUMBLE:
         selector.update()
-    elif event == event_type.RESOLVE:
+    elif event == EventType.RESOLVE:
         selector.resolve_char(val)
 
-class event_type:
+class EventType:
     JUMBLE=1
     RESOLVE=2
 
-class barcamp_prize_selector:
+class BarcampPrizeSelector:
 
     UPDATE_RATE = 0.1
     RESOLVE_RATE = 0.5
@@ -61,7 +61,7 @@ class barcamp_prize_selector:
         self.people = []
         i = 0
         for p in peep_list:
-            self.people.append(uplink_text(p, 20))
+            self.people.append(UplinkText(p, 20))
             i = i + 1
         self.loop = None    # main event loop
         self.resolving = -1 # index of which item we are resolving
@@ -77,7 +77,7 @@ class barcamp_prize_selector:
     def update(self):
         for p in self.people:
             p.update()
-        self.loop.set_alarm_in(self.UPDATE_RATE, alarm_handler, (self, event_type.JUMBLE, None))
+        self.loop.set_alarm_in(self.UPDATE_RATE, alarm_handler, (self, EventType.JUMBLE, None))
 
     def resolve_char(self, count):
         for val in self.started:
@@ -90,7 +90,7 @@ class barcamp_prize_selector:
         if (count % self.NEXT_DELAY) == 0:
                 self.start (count / self.NEXT_DELAY)
         
-        self.loop.set_alarm_in(self.RESOLVE_RATE, alarm_handler, (self, event_type.RESOLVE, count + 1))
+        self.loop.set_alarm_in(self.RESOLVE_RATE, alarm_handler, (self, EventType.RESOLVE, count + 1))
 
     def render(self):
 
@@ -105,7 +105,7 @@ class barcamp_prize_selector:
         self.loop = urwid.MainLoop(fill)
 
         # start resolving after 10 seconds
-        self.loop.set_alarm_in(self.START_DELAY, alarm_handler, (self, event_type.RESOLVE, 0))
+        self.loop.set_alarm_in(self.START_DELAY, alarm_handler, (self, EventType.RESOLVE, 0))
 
         self.update()
         self.loop.run()
@@ -114,6 +114,6 @@ if __name__ == "__main__":
     names = [
             "Edd Barrett", "Matt Mole", "Han Greer", "Tris Linell", "Gunther Pleasureman"
             ]
-    b = barcamp_prize_selector(names)
+    b = BarcampPrizeSelector(names)
     #cProfile.run('b.render()')
     b.render()
