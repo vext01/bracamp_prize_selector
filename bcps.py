@@ -7,10 +7,10 @@ import sys
 import time
 from random import *
 
-UPDATE_RATE = 0.2
-RESOLVE_RATE = 1
+UPDATE_RATE = 0.1
+RESOLVE_RATE = 0.5
 START_DELAY = 2
-NEXT_DELAY = 4
+NEXT_DELAY = 4  # cycles stagger
 
 class uplink_text:
 
@@ -36,7 +36,7 @@ class uplink_text:
 
     def resolve_char(self):
         n = self.rng.randrange(len(self.unresolved_chars))
-	del self.unresolved_chars[n]
+        del self.unresolved_chars[n]
 
     def fully_resolved(self):
         return len(self.unresolved_chars) == 0
@@ -65,13 +65,13 @@ class barcamp_prize_selector:
             i = i + 1
         self.loop = None    # main event loop
         self.resolving = -1 # index of which item we are resolving
-	self.started = []
-	self.s = False
+        self.started = []
+        self.s = False
 
     def start(self, val):
-	if val < len (self.people):
+        if val < len (self.people):
             self.started.append(val)
-	    self.s = True
+            self.s = True
 
 
     def update(self):
@@ -80,17 +80,17 @@ class barcamp_prize_selector:
         self.loop.set_alarm_in(UPDATE_RATE, alarm_handler, (self, event_type.JUMBLE, None))
 
     def resolve_char(self, count):
-	for val in self.started:
+        for val in self.started:
             self.people[val].resolve_char()
-	    if self.people[val].fully_resolved():
+            if self.people[val].fully_resolved():
                 self.started.remove(val)
         if self.s and len(self.started) == 0:
-	    raise urwid.ExitMainLoop
+            raise urwid.ExitMainLoop
 
-	if (count % NEXT_DELAY) == 0:
-		self.start (count / NEXT_DELAY)
+        if (count % NEXT_DELAY) == 0:
+                self.start (count / NEXT_DELAY)
         
-	self.loop.set_alarm_in(RESOLVE_RATE, alarm_handler, (self, event_type.RESOLVE, count + 1))
+        self.loop.set_alarm_in(RESOLVE_RATE, alarm_handler, (self, event_type.RESOLVE, count + 1))
 
     def render(self):
 
@@ -105,7 +105,7 @@ class barcamp_prize_selector:
         self.loop = urwid.MainLoop(fill)
 
         # start resolving after 10 seconds
-	self.loop.set_alarm_in(START_DELAY, alarm_handler, (self, event_type.RESOLVE, 0))
+        self.loop.set_alarm_in(START_DELAY, alarm_handler, (self, event_type.RESOLVE, 0))
 
         self.update()
         self.loop.run()
