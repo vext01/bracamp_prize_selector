@@ -1,9 +1,16 @@
 #!/usr/bin/env python
 
+import cProfile
+
 import urwid
 import sys
 import time
 from random import *
+
+UPDATE_RATE = 0.2
+RESOLVE_RATE = 1
+START_DELAY = 2
+NEXT_DELAY = 4
 
 class uplink_text:
 
@@ -12,12 +19,12 @@ class uplink_text:
         self.width = width
         self.text = text.center(width)
         self.widget = urwid.Text("", align='center')
-        self.resolved_chars = []
+        self.unresolved_chars = range(len(self.text))
 
     def make_mask(self):
         m = ""
         for i in range(self.width):
-            if i in self.resolved_chars:
+            if not i in self.unresolved_chars:
                 m = m + self.text[i]
             else:
                 m = m + chr(self.rng.randrange(33, 122))
@@ -28,27 +35,20 @@ class uplink_text:
         self.widget.set_text(mask)
 
     def resolve_char(self):
-        ok = False;
-
-        while not ok:
-            n = self.rng.randrange(self.width)
-            if not n in self.resolved_chars:
-                ok = True
-        self.resolved_chars.append(n)
+        n = self.rng.randrange(len(self.unresolved_chars))
+	del self.unresolved_chars[n]
 
     def fully_resolved(self):
-        if len(self.resolved_chars) == len(self.text):
-            return True
-        return False
+        return len(self.unresolved_chars) == 0
 
 # has to be a function not a method
 def alarm_handler(loop, data):
-    (selector, event) = data;
+    (selector, event, val) = data;
 
     if event == event_type.JUMBLE:
         selector.update()
     elif event == event_type.RESOLVE:
-        selector.resolve_char()
+        selector.resolve_char(val)
 
 class event_type:
     JUMBLE=1
@@ -65,28 +65,32 @@ class barcamp_prize_selector:
             i = i + 1
         self.loop = None    # main event loop
         self.resolving = -1 # index of which item we are resolving
+	self.started = []
+	self.s = False
+
+    def start(self, val):
+	if val < len (self.people):
+            self.started.append(val)
+	    self.s = True
+
 
     def update(self):
         for p in self.people:
             p.update()
-        self.loop.set_alarm_in(.1, alarm_handler, (self, event_type.JUMBLE))
+        self.loop.set_alarm_in(UPDATE_RATE, alarm_handler, (self, event_type.JUMBLE, None))
 
-    def resolve_char(self):
+    def resolve_char(self, count):
+	for val in self.started:
+            self.people[val].resolve_char()
+	    if self.people[val].fully_resolved():
+                self.started.remove(val)
+        if self.s and len(self.started) == 0:
+	    raise urwid.ExitMainLoop
 
-        # done?
-        if self.resolving >= len(self.people):
-            time.sleep(5)
-            sys.exit(1)
-
-        # -1 while intro is running
-        if self.resolving == -1:
-            self.resolving = 0
-        else:
-            self.people[self.resolving].resolve_char()
-            if self.people[self.resolving].fully_resolved():
-                self.resolving = self.resolving + 1
-
-        self.loop.set_alarm_in(.2, alarm_handler, (self, event_type.RESOLVE))
+	if (count % NEXT_DELAY) == 0:
+		self.start (count / NEXT_DELAY)
+        
+	self.loop.set_alarm_in(RESOLVE_RATE, alarm_handler, (self, event_type.RESOLVE, count + 1))
 
     def render(self):
 
@@ -101,7 +105,7 @@ class barcamp_prize_selector:
         self.loop = urwid.MainLoop(fill)
 
         # start resolving after 10 seconds
-        self.loop.set_alarm_in(2, alarm_handler, (self, event_type.RESOLVE))
+	self.loop.set_alarm_in(START_DELAY, alarm_handler, (self, event_type.RESOLVE, 0))
 
         self.update()
         self.loop.run()
@@ -111,4 +115,5 @@ if __name__ == "__main__":
             "Edd Barrett", "Matt Mole", "Han Greer", "Tris Linell", "Gunther Pleasureman"
             ]
     b = barcamp_prize_selector(names)
+    #cProfile.run('b.render()')
     b.render()
