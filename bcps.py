@@ -7,11 +7,6 @@ import sys
 import time
 from random import *
 
-UPDATE_RATE = 0.1
-RESOLVE_RATE = 0.5
-START_DELAY = 2
-NEXT_DELAY = 4  # cycles stagger
-
 class uplink_text:
 
     def __init__(self, text, width):
@@ -56,6 +51,11 @@ class event_type:
 
 class barcamp_prize_selector:
 
+    UPDATE_RATE = 0.1
+    RESOLVE_RATE = 0.5
+    START_DELAY = 2
+    NEXT_DELAY = 4  # cycles stagger
+
     def __init__(self, peep_list):
 
         self.people = []
@@ -77,7 +77,7 @@ class barcamp_prize_selector:
     def update(self):
         for p in self.people:
             p.update()
-        self.loop.set_alarm_in(UPDATE_RATE, alarm_handler, (self, event_type.JUMBLE, None))
+        self.loop.set_alarm_in(self.UPDATE_RATE, alarm_handler, (self, event_type.JUMBLE, None))
 
     def resolve_char(self, count):
         for val in self.started:
@@ -87,10 +87,10 @@ class barcamp_prize_selector:
         if self.s and len(self.started) == 0:
             raise urwid.ExitMainLoop
 
-        if (count % NEXT_DELAY) == 0:
-                self.start (count / NEXT_DELAY)
+        if (count % self.NEXT_DELAY) == 0:
+                self.start (count / self.NEXT_DELAY)
         
-        self.loop.set_alarm_in(RESOLVE_RATE, alarm_handler, (self, event_type.RESOLVE, count + 1))
+        self.loop.set_alarm_in(self.RESOLVE_RATE, alarm_handler, (self, event_type.RESOLVE, count + 1))
 
     def render(self):
 
@@ -105,7 +105,7 @@ class barcamp_prize_selector:
         self.loop = urwid.MainLoop(fill)
 
         # start resolving after 10 seconds
-        self.loop.set_alarm_in(START_DELAY, alarm_handler, (self, event_type.RESOLVE, 0))
+        self.loop.set_alarm_in(self.START_DELAY, alarm_handler, (self, event_type.RESOLVE, 0))
 
         self.update()
         self.loop.run()
