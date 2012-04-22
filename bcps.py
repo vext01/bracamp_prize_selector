@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import cProfile
-
 import urwid
 import sys
 import time
@@ -115,5 +113,4 @@ if __name__ == "__main__":
             "Edd Barrett", "Matt Mole", "Han Greer", "Tris Linell", "Gunther Pleasureman"
             ]
     b = BarcampPrizeSelector(names)
-    #cProfile.run('b.render()')
     b.render()
