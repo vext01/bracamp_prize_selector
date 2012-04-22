@@ -3,6 +3,9 @@
 import urwid
 import sys
 import time
+import sqlite3
+import os.path
+
 from random import *
 
 class UplinkText:
@@ -47,7 +50,7 @@ class EventType:
     JUMBLE=1
     RESOLVE=2
 
-class BarcampPrizeSelector:
+class SuspenseDisplay:
 
     UPDATE_RATE = 0.1
     RESOLVE_RATE = 0.5
@@ -108,9 +111,38 @@ class BarcampPrizeSelector:
         self.update()
         self.loop.run()
 
+class PrizeSelector:
+
+    DBNAME = "barcamp.db"
+
+    def __init__(self):
+        self.init_sql()
+
+    def init_sql(self):
+
+        if os.path.isfile(self.DBNAME):
+            print("Using existing database\n")
+        else:
+            print("Creating new database\n")
+
+        self.db = sqlite3.connect(self.DBNAME)
+        self.curs = c = self.db.cursor()
+
+        # make schema (if we need to)
+        c.execute('''CREATE TABLE IF NOT EXISTS people (name TEXT, prize_allocated INT);''');
+
+    def menu(self):
+        print("BarCamp Prize Selector")
+        print("----------------------\n");
+
+    def close_sql(self):
+        self.db.close()
+
 if __name__ == "__main__":
     names = [
             "Edd Barrett", "Matt Mole", "Han Greer", "Tris Linell", "Gunther Pleasureman"
             ]
-    b = BarcampPrizeSelector(names)
-    b.render()
+    #b = SuspenseDisplay(names)
+    #b.render()
+    ps = PrizeSelector()
+    ps.close_sql()
