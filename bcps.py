@@ -147,6 +147,8 @@ class PrizeSelector:
                                       "msg" : "prizes-import <file>"},
                 "prizes-list" :     { "func" : self.cmd_prizes_list,
                                       "msg" : "prizes-list"},
+                "prizes-issue" :    { "func" : self.cmd_prizes_issue,
+                                      "msg" : "prizes-issue <prizes-id> <qty>"}
         };
 
         print("Type 'help' for usage instructions.")
@@ -179,10 +181,9 @@ class PrizeSelector:
         self.curs.execute(
                 "SELECT prize_id, descr, quantity, quantity_allocated FROM prizes", ())
         res = self.curs.fetchall()
-        print(res)
 
         for rec in res:
-            print("  %03d: (%-d/%-d) %s" % (rec[0], rec[3], rec[2], rec[1]))
+            print("  %03d: (%d/%d) %s" % (rec[0], rec[3], rec[2], rec[1]))
 
     def close_sql(self):
         self.db.close()
@@ -258,6 +259,30 @@ class PrizeSelector:
         print("Names with prizes allocated:")
         for rec in res:
             print("  %3s: %s" % (rec[0], rec[1]))
+
+    def cmd_prizes_issue(self, args):
+
+        try:
+            pid = int(args[0])
+            qty_going = int(args[1])
+        except ValueError:
+            print("bad argument")
+            return
+
+        self.curs.execute(
+                "SELECT prize_id, descr, quantity, quantity_allocated FROM" + \
+                " prizes WHERE prize_id = ?", (pid,))
+        res = self.curs.fetchall()
+
+        if len(res) != 1:
+            print("Unknown prizes id")
+            return
+
+        if res[0][2] - res[0][3] < qty_going:
+            print("Not enough prizes left")
+            return
+
+        # XXX
 
     def close_sql(self):
         self.db.close()
