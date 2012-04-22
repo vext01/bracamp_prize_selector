@@ -5,6 +5,7 @@ import sys
 import time
 import sqlite3
 import os.path
+import os
 
 from random import *
 
@@ -129,11 +130,134 @@ class PrizeSelector:
         self.curs = c = self.db.cursor()
 
         # make schema (if we need to)
-        c.execute('''CREATE TABLE IF NOT EXISTS people (name TEXT, prize_allocated INT);''');
+        c.execute('''CREATE TABLE IF NOT EXISTS names
+            (name_id INTEGER PRIMARY KEY, name TEXT, prize_allocated INT);''');
+        c.execute('''CREATE TABLE IF NOT EXISTS prizes
+                (prize_id INTEGER PRIMARY KEY, descr TEXT, quantity INT,
+                quantity_allocated INT);''');
 
-    def menu(self):
-        print("BarCamp Prize Selector")
-        print("----------------------\n");
+    def prompt(self):
+
+        cmds = {
+                "names-import" :    { "func" : self.cmd_names_import,
+                                      "msg" : "names-import <file>"},
+                "names-list" :      { "func" : self.cmd_names_list,
+                                      "msg" : "names-list"},
+                "prizes-import" :   { "func" : self.cmd_prizes_import,
+                                      "msg" : "prizes-import <file>"},
+                "prizes-list" :     { "func" : self.cmd_prizes_list,
+                                      "msg" : "prizes-list"},
+        };
+
+        print("Type 'help' for usage instructions.")
+
+        while (True):
+            sys.stdout.write("> ")
+            sys.stdout.flush()
+
+            try:
+                line = raw_input().strip()
+            except EOFError:
+                break
+
+            elems = line.split(" ")
+
+            if (elems[0] == "quit"):
+                break
+
+            try:
+               func = cmds[elems[0]]["func"]
+            except KeyError:
+                # bogus command
+                print("parse error")
+                continue
+
+            # user gave a useful command, execute it 
+            func(elems[1:])
+
+    def cmd_prizes_list(self, args):
+        self.curs.execute(
+                "SELECT prize_id, descr, quantity, quantity_allocated FROM prizes", ())
+        res = self.curs.fetchall()
+        print(res)
+
+        for rec in res:
+            print("  %03d: (%-d/%-d) %s" % (rec[0], rec[3], rec[2], rec[1]))
+
+    def close_sql(self):
+        self.db.close()
+
+    def cmd_prizes_import(self, args):
+
+        try:
+            f = open(args[0], "r")
+        except IOError:
+            print("File not found")
+            return
+
+        prizes = []
+        for line in f:
+            if line.startswith("#") or len(line.strip()) == 0:
+                continue
+            elems = line.split(",")
+
+            if len(elems) != 2:
+                print("malformed line ignored: '%s'" % (line))
+                continue
+
+            try:
+                qty = int(elems[1])
+            except:
+                print("malformed line ignored: '%s'" % (line))
+                continue
+
+            prizes.append((elems[0], qty))
+        f.close()
+
+        self.curs.executemany(
+            "INSERT INTO prizes (descr, quantity, quantity_allocated) " + \
+                    "VALUES (?, ?, 0)", prizes)
+        self.db.commit()
+
+        print("Imported %d prize descriptions from %s" % (len(prizes), args[0]))
+
+    def cmd_names_import(self, args):
+
+        try:
+            f = open(args[0], "r")
+        except IOError:
+            print("File not found")
+            return
+
+        names = []
+        for line in f:
+            if line.startswith("#") or len(line.strip()) == 0:
+                continue
+            names.append((line.strip(),))
+        f.close()
+
+        self.curs.executemany(
+            "INSERT INTO names (name, prize_allocated) VALUES (?, -1)", names)
+        self.db.commit()
+
+        print("Imported %d names from %s" % (len(names), args[0]))
+
+    def cmd_names_list(self, args):
+        self.curs.execute("SELECT * FROM names WHERE prize_allocated = -1", ())
+        res = self.curs.fetchall()
+
+        print("Names with no prizes allocated:")
+        for rec in res:
+            print("  %3s: %s" % (rec[0], rec[1]))
+
+        print("")
+
+        self.curs.execute("SELECT * FROM names WHERE prize_allocated > -1", ())
+        res = self.curs.fetchall()
+
+        print("Names with prizes allocated:")
+        for rec in res:
+            print("  %3s: %s" % (rec[0], rec[1]))
 
     def close_sql(self):
         self.db.close()
@@ -145,4 +269,5 @@ if __name__ == "__main__":
     #b = SuspenseDisplay(names)
     #b.render()
     ps = PrizeSelector()
+    ps.prompt()
     ps.close_sql()
