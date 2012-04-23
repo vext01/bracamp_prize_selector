@@ -82,9 +82,13 @@ class SuspenseDisplay:
         self.parent = parent
         i = 0
 
+        max_len = 20
+        for i in peep_list:
+            if len(i) > max_len:
+                max_len = len(i)
+
         for p in peep_list:
-            self.people.append(UplinkText(p, 20))
-            i = i + 1
+            self.people.append(UplinkText(p, max_len))
 
         self.loop = None    # main event loop
         self.resolving = -1 # index of which item we are resolving
