@@ -140,16 +140,18 @@ class PrizeSelector:
     def __init__(self):
 
         self.cmds = {
-                "namesimport" :    { "func" : self.cmd_names_import,
-                                      "msg" : "names-import <file>"},
-                "nameslist" :      { "func" : self.cmd_names_list,
-                                      "msg" : "names-list"},
-                "prizesimport" :   { "func" : self.cmd_prizes_import,
-                                      "msg" : "prizes-import <file>"},
-                "prizeslist" :     { "func" : self.cmd_prizes_list,
-                                      "msg" : "prizes-list"},
-                "prizesissue" :    { "func" : self.cmd_prizes_issue,
-                                      "msg" : "prizes-issue <prizes-id> <qty>"}
+                "names_import" :    { "func" : self.cmd_names_import,
+                                      "msg" : "names_import <file>"},
+                "names_list" :      { "func" : self.cmd_names_list,
+                                      "msg" : "names_list"},
+                "prizes_import" :   { "func" : self.cmd_prizes_import,
+                                      "msg" : "prizes_import <file>"},
+                "prizes_list" :     { "func" : self.cmd_prizes_list,
+                                      "msg" : "prizes_list"},
+                "prizes_issue" :    { "func" : self.cmd_prizes_issue,
+                                      "msg" : "prizes_issue <prizes-id> <qty>"},
+                "help" :            { "func" : self.cmd_help,
+                                      "msg" : "help" }
         };
         self.init_sql()
         readline.set_completer(SimpleCompleter(
@@ -202,6 +204,10 @@ class PrizeSelector:
 
             # user gave a useful command, execute it 
             cmd["func"](elems[1:])
+
+    def cmd_help(self, args):
+        for (k, v) in self.cmds.items():
+            print("  " + v["msg"])
 
     def cmd_prizes_list(self, args):
         self.curs.execute(
