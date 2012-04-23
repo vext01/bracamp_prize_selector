@@ -384,8 +384,7 @@ class SimpleCompleter(object):
             # This is the first time for this text, so build a match list.
             if text:
                 self.matches = [s 
-                                for s in self.options
-                                if s and s.startswith(text)]
+                    for s in self.options if s and s.startswith(text)]
             else:
                 self.matches = self.options[:]
 
