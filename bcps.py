@@ -176,14 +176,15 @@ class PrizeSelector:
 
     def prompt(self):
 
-
         print("Type 'help' for usage instructions.")
 
         while (True):
-            line = raw_input('> ')
+            try:
+                line = raw_input('> ')
+            except EOFError:
+                break
 
             elems = line.split(" ")
-
             if (elems[0] == "quit"):
                 break
 
