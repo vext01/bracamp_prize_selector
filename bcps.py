@@ -13,7 +13,6 @@ rng = Random()
 class UplinkText:
 
     def __init__(self, text, width):
-        #self.rng = Random()
         self.width = width
         self.text = text.center(width)
         self.widget = urwid.Text("", align='center')
@@ -123,10 +122,6 @@ class SuspenseDisplay:
         self.loop = urwid.MainLoop(fill,
                 unhandled_input=make_input_handler(self))
 
-        # start resolving after 10 seconds
-        #self.loop.set_alarm_in(self.START_DELAY, alarm_handler, (self, EventType.RESOLVE, 0))
-        # start solving when enter is pressed via input_handler
-
         self.update()
         self.loop.run()
 
@@ -136,7 +131,6 @@ class PrizeSelector:
 
     def __init__(self):
         self.init_sql()
-        self.suspense_display = None # currently running suspense display inst
 
     def init_sql(self):
 
@@ -331,11 +325,6 @@ class PrizeSelector:
         self.db.close()
 
 if __name__ == "__main__":
-    names = [
-            "Edd Barrett", "Matt Mole", "Han Greer", "Tris Linell", "Gunther Pleasureman"
-            ]
-    #b = SuspenseDisplay(names)
-    #b.render()
     ps = PrizeSelector()
     ps.prompt()
     ps.close_sql()
