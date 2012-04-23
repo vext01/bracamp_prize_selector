@@ -256,7 +256,8 @@ class PrizeSelector:
                     "VALUES (?, ?, 0)", prizes)
         self.db.commit()
 
-        print("Imported %d prize descriptions from %s" % (len(prizes), args[0]))
+        print("Imported %d prize descriptions from %s" % \
+            (len(prizes), args[0]))
 
     def cmd_names_import(self, args):
 
@@ -289,21 +290,25 @@ class PrizeSelector:
         print("Imported %d names from %s" % (len(recs), args[0]))
 
     def cmd_names_list(self, args):
-        self.curs.execute("SELECT name_id, fname, lname, role, company FROM names WHERE prize_allocated = -1", ())
+        self.curs.execute("SELECT name_id, fname, lname, role, company " + \
+                "FROM names WHERE prize_allocated = -1", ())
         res = self.curs.fetchall()
 
         print("Names with no prizes allocated:")
         for rec in res:
-            print("  %3s %s: %s %s (%s)" % (rec[0], rec[3], rec[1], rec[2], rec[4]))
+            print("  %3s %s: %s %s (%s)" % \
+                (rec[0], rec[3], rec[1], rec[2], rec[4]))
 
         print("")
 
-        self.curs.execute("SELECT name_id, fname, lname, role, company FROM names WHERE prize_allocated > -1", ())
+        self.curs.execute("SELECT name_id, fname, lname, role, company " + \
+            "FROM names WHERE prize_allocated > -1", ())
         res = self.curs.fetchall()
 
         print("Names with prizes allocated:")
         for rec in res:
-            print("  %3s %s: %s %s (%s)" % (rec[0], rec[3], rec[1], rec[2], rec[4]))
+            print("  %3s %s: %s %s (%s)" % \
+                (rec[0], rec[3], rec[1], rec[2], rec[4]))
 
     def cmd_prizes_issue(self, args):
 
