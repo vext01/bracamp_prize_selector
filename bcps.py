@@ -320,7 +320,15 @@ class PrizeSelector:
         sd.render()
         self.suspense_display = None
 
-        # XXX update db
+        # update db
+        updates = [(pid, x[0]) for x in lucky_people]
+        self.curs.executemany("UPDATE names SET prize_allocated=? WHERE " + \
+            "name_id=?", updates)
+
+        self.curs.execute("UPDATE prizes SET " + \
+            "quantity_allocated=quantity_allocated + ? WHERE " + \
+            "prize_id=?", (qty_going, pid))
+        self.db.commit()
 
     """ Choose random names that have not yet had a prize """
     def choose_x_random_names(self, x):
