@@ -301,14 +301,17 @@ class PrizeSelector:
 
         print("")
 
-        self.curs.execute("SELECT name_id, fname, lname, role, company " + \
-            "FROM names WHERE prize_allocated > -1", ())
+        self.curs.execute("SELECT names.name_id, names.fname, names.lname, " + \
+            "names.role, names.company, prizes.prize_id, prizes.descr " + \
+            "FROM names,prizes WHERE names.prize_allocated = prizes.prize_id " + \
+            "AND prize_allocated > -1", ())
         res = self.curs.fetchall()
 
         print("Names with prizes allocated:")
         for rec in res:
             print("  %3s %s: %s %s (%s)" % \
                 (rec[0], rec[3], rec[1], rec[2], rec[4]))
+            print("        %3d: %s" % (rec[5], rec[6]))
 
     def cmd_prizes_issue(self, args):
 
