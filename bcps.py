@@ -12,6 +12,9 @@ import readline
 from random import *
 rng = Random()
 
+class PeopleNumberError(Exception):
+    pass
+
 class UplinkText:
 
     def __init__(self, text, width):
@@ -324,7 +327,12 @@ class PrizeSelector:
             print("Not enough prizes left")
             return
 
-        lucky_people = self.choose_x_random_names(qty_going)
+        try:
+            lucky_people = self.choose_x_random_names(qty_going)
+        except PeopleNumberError:
+            print("Too few people left (who are not staff)")
+            return
+
         names_only = [x[1] + " " + x[2] for x in lucky_people]
 
         sd = SuspenseDisplay(self, names_only)
@@ -349,6 +357,9 @@ class PrizeSelector:
                 "SELECT name_id, fname, lname FROM names WHERE " + \
                 "prize_allocated=-1 AND role != 'ST';")
         res = self.curs.fetchall()
+
+        if len(res) < x:
+            raise PeopleNumberError
 
         selected = []
         for unused in range(x):
