@@ -168,7 +168,8 @@ class PrizeSelector:
 
         # make schema (if we need to)
         c.execute('''CREATE TABLE IF NOT EXISTS names
-            (name_id INTEGER PRIMARY KEY, name TEXT, prize_allocated INT);''');
+            (name_id INTEGER PRIMARY KEY, fname TEXT, lname TEXT, role TEXT,
+            company TEXT, prize_allocated INT);''');
         c.execute('''CREATE TABLE IF NOT EXISTS prizes
                 (prize_id INTEGER PRIMARY KEY, descr TEXT, quantity INT,
                 quantity_allocated INT);''');
@@ -250,35 +251,44 @@ class PrizeSelector:
             print("File not found")
             return
 
-        names = []
+        recs = []
         for line in f:
             if line.startswith("#") or len(line.strip()) == 0:
                 continue
-            names.append((line.strip(),))
+            rec = (fname, lname, role, company) = line.strip().split(",")
+
+            if role not in ("AT", "ST", "SP"):
+                print("Bad role code: %s" % (role))
+                print("Aborting")
+                sys.exit(1)
+
+            recs.append(rec)
         f.close()
 
         self.curs.executemany(
-            "INSERT INTO names (name, prize_allocated) VALUES (?, -1)", names)
+            "INSERT INTO names " + \
+            "(fname, lname, role, company, prize_allocated) " + \
+            "VALUES (?, ?, ?, ?, -1)", recs)
         self.db.commit()
 
-        print("Imported %d names from %s" % (len(names), args[0]))
+        print("Imported %d names from %s" % (len(recs), args[0]))
 
     def cmd_names_list(self, args):
-        self.curs.execute("SELECT * FROM names WHERE prize_allocated = -1", ())
+        self.curs.execute("SELECT name_id, fname, lname, role, company FROM names WHERE prize_allocated = -1", ())
         res = self.curs.fetchall()
 
         print("Names with no prizes allocated:")
         for rec in res:
-            print("  %3s: %s" % (rec[0], rec[1]))
+            print("  %3s %s: %s %s (%s)" % (rec[0], rec[3], rec[1], rec[2], rec[4]))
 
         print("")
 
-        self.curs.execute("SELECT * FROM names WHERE prize_allocated > -1", ())
+        self.curs.execute("SELECT name_id, fname, lname, role, company FROM names WHERE prize_allocated > -1", ())
         res = self.curs.fetchall()
 
         print("Names with prizes allocated:")
         for rec in res:
-            print("  %3s: %s" % (rec[0], rec[1]))
+            print("  %3s %s: %s %s (%s)" % (rec[0], rec[3], rec[1], rec[2], rec[4]))
 
     def cmd_prizes_issue(self, args):
 
@@ -303,8 +313,7 @@ class PrizeSelector:
             return
 
         lucky_people = self.choose_x_random_names(qty_going)
-
-        names_only = [x[1] for x in lucky_people]
+        names_only = [x[1] + " " + x[2] for x in lucky_people]
 
         sd = SuspenseDisplay(self, names_only)
         self.suspense_display = sd
@@ -317,7 +326,8 @@ class PrizeSelector:
     def choose_x_random_names(self, x):
 
         self.curs.execute(
-                "SELECT name_id, name FROM names WHERE prize_allocated=-1;")
+                "SELECT name_id, fname, lname FROM names WHERE " + \
+                "prize_allocated=-1 AND role != 'ST';")
         res = self.curs.fetchall()
 
         selected = []

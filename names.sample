@@ -1,22 +1,24 @@
 # Some sample names.
 # lines starting hash are comments
 # Blank lines are ignored
+# (fname,lname,role,company)
+# role: ST = staff, SP = sponsor, AT = attendee
 
-Max Payne
-Jim Bob
-Prime Minister
-Barry Chuckle
-Billy Joel
-Gunther Tralala
-Tony Blackburn
-Terrance Philip
-David Hasslehoff
-Sonic Hedgehog
-Shephard Naeme
-Monty Python
-Richard OBrian
-Adolf Hitler
-Thomas Tank
-Mr T
-Towel Rack
-Bruce Willis
+Max,Payne,AT,CompanyName
+Jim,Bob,AT,CompanyName
+Prime,Minister,AT,CompanyName
+Barry,Chuckle,AT,CompanyName
+Billy,Joel,AT,CompanyName
+Gunther,Tralala,AT,CompanyName
+Tony,Blackburn,AT,CompanyName
+Terrance,Philip,AT,CompanyName
+David,Hasslehoff,AT,CompanyName
+Sonic,Hedgehog,AT,CompanyName
+Shephard,Naeme,AT,CompanyName
+Monty,Python,AT,CompanyName
+Richard,OBrian,AT,CompanyName
+Adolf,Hitler,AT,CompanyName
+Thomas,Tank,AT,CompanyName
+Mr,T,AT,CompanyName
+Towel,Rack,AT,CompanyName
+Bruce,Willis,AT,CompanyName
