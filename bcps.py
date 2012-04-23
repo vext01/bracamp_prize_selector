@@ -8,11 +8,12 @@ import os.path
 import os
 
 from random import *
+rng = Random()
 
 class UplinkText:
 
     def __init__(self, text, width):
-        self.rng = Random()
+        #self.rng = Random()
         self.width = width
         self.text = text.center(width)
         self.widget = urwid.Text("", align='center')
@@ -24,7 +25,7 @@ class UplinkText:
             if not i in self.unresolved_chars:
                 m = m + self.text[i]
             else:
-                m = m + chr(self.rng.randrange(33, 122))
+                m = m + chr(rng.randrange(33, 122))
         return m
 
     def update(self):
@@ -32,7 +33,7 @@ class UplinkText:
         self.widget.set_text(mask)
 
     def resolve_char(self):
-        n = self.rng.randrange(len(self.unresolved_chars))
+        n = rng.randrange(len(self.unresolved_chars))
         del self.unresolved_chars[n]
 
     def fully_resolved(self):
@@ -282,7 +283,29 @@ class PrizeSelector:
             print("Not enough prizes left")
             return
 
-        # XXX
+        lucky_people = self.choose_x_random_names(qty_going)
+
+        names_only = [x[1] for x in lucky_people]
+
+        b = SuspenseDisplay(names_only)
+        b.render()
+
+        # XXX update db
+
+    """ Choose random names that have not yet had a prize """
+    def choose_x_random_names(self, x):
+
+        self.curs.execute(
+                "SELECT name_id, name FROM names WHERE prize_allocated=-1;")
+        res = self.curs.fetchall()
+
+        selected = []
+        for unused in range(x):
+            chosen = rng.randint(0, len(res) - 1)
+            selected.append(res[chosen])
+            del(res[chosen])
+
+        return selected
 
     def close_sql(self):
         self.db.close()
