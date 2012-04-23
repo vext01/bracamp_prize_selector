@@ -406,8 +406,5 @@ if __name__ == "__main__":
 
 """
 TODO:
-    * readline
-    * arg handling
-    * update db
     * backup db
 """
