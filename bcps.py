@@ -76,10 +76,11 @@ class SuspenseDisplay:
     START_DELAY = 2
     NEXT_DELAY = 4  # cycles stagger
 
-    def __init__(self, parent, peep_list):
+    def __init__(self, parent, peep_list, title):
 
         self.people = []
         self.parent = parent
+        self.title = title.upper()
         i = 0
 
         max_len = 20
@@ -127,6 +128,10 @@ class SuspenseDisplay:
     def render(self):
 
         widgets = []
+        widgets.append(urwid.Text("[ " + self.title + " ]", align='center'))
+        widgets.append(urwid.Divider())
+        widgets.append(urwid.Divider())
+
         for p in self.people:
             p.update()
             widgets.append(p.widget)
@@ -347,7 +352,7 @@ class PrizeSelector:
 
         names_only = [x[1] + " " + x[2] for x in lucky_people]
 
-        sd = SuspenseDisplay(self, names_only)
+        sd = SuspenseDisplay(self, names_only, res[0][1])
         self.suspense_display = sd
         sd.render()
         self.suspense_display = None
