@@ -76,13 +76,15 @@ class SuspenseDisplay:
         self.people = []
         self.parent = parent
         i = 0
+
         for p in peep_list:
             self.people.append(UplinkText(p, 20))
             i = i + 1
+
         self.loop = None    # main event loop
         self.resolving = -1 # index of which item we are resolving
-        self.people_started = [] # XXX mex rename
-        self.started = False #
+        self.people_started = []
+        self.started = False
         self.finished = False
 
     def start(self, val):
