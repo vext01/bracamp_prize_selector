@@ -69,7 +69,7 @@ class EventType:
 class SuspenseDisplay:
 
     UPDATE_RATE = 0.1
-    RESOLVE_RATE = 0.5
+    RESOLVE_RATE = 0.2
     START_DELAY = 2
     NEXT_DELAY = 4  # cycles stagger
 
@@ -98,7 +98,9 @@ class SuspenseDisplay:
         for p in self.people:
             p.update()
         if not self.finished:
-            self.loop.set_alarm_in(self.UPDATE_RATE, alarm_handler, (self, EventType.JUMBLE, None))
+            self.loop.set_alarm_in(
+                self.UPDATE_RATE, alarm_handler,
+                (self, EventType.JUMBLE, None))
 
     def resolve_char(self, count):
         for val in self.people_started:
@@ -111,7 +113,9 @@ class SuspenseDisplay:
         if (count % self.NEXT_DELAY) == 0:
                 self.start(count / self.NEXT_DELAY)
         
-        self.loop.set_alarm_in(self.RESOLVE_RATE, alarm_handler, (self, EventType.RESOLVE, count + 1))
+        self.loop.set_alarm_in(
+            self.RESOLVE_RATE, alarm_handler,
+            (self, EventType.RESOLVE, count + 1))
 
     def render(self):
 
@@ -135,8 +139,7 @@ class PrizeSelector:
 
     def __init__(self):
 
-
-        cmds = {
+        self.cmds = {
                 "namesimport" :    { "func" : self.cmd_names_import,
                                       "msg" : "names-import <file>"},
                 "nameslist" :      { "func" : self.cmd_names_list,
@@ -149,9 +152,9 @@ class PrizeSelector:
                                       "msg" : "prizes-issue <prizes-id> <qty>"}
         };
         self.init_sql()
-        readline.set_completer(SimpleCompleter([a[0] for a in cmds.items()]).complete)
+        readline.set_completer(SimpleCompleter(
+            [a[0] for a in self.cmds.items()]).complete)
         readline.parse_and_bind('tab: complete')
-        readline.parse_and_bind('set editing-mode vi')
 
     def init_sql(self):
 
@@ -184,7 +187,7 @@ class PrizeSelector:
                 break
 
             try:
-               func = cmds[elems[0]]["func"]
+               func = self.cmds[elems[0]]["func"]
             except KeyError:
                 # bogus command
                 print("parse error")
@@ -195,7 +198,8 @@ class PrizeSelector:
 
     def cmd_prizes_list(self, args):
         self.curs.execute(
-                "SELECT prize_id, descr, quantity, quantity_allocated FROM prizes", ())
+                "SELECT prize_id, descr, quantity, quantity_allocated " + \
+                "FROM prizes", ())
         res = self.curs.fetchall()
 
         for rec in res:
