@@ -330,3 +330,11 @@ if __name__ == "__main__":
     ps = PrizeSelector()
     ps.prompt()
     ps.close_sql()
+
+"""
+TODO:
+    * readline
+    * arg handling
+    * update db
+    * backup db
+"""
