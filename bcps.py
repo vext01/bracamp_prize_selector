@@ -184,19 +184,24 @@ class PrizeSelector:
             except EOFError:
                 break
 
-            elems = line.split(" ")
+            elems = line.strip().split(" ")
             if (elems[0] == "quit"):
                 break
 
             try:
-               func = self.cmds[elems[0]]["func"]
+               cmd = self.cmds[elems[0]]
             except KeyError:
                 # bogus command
                 print("parse error")
                 continue
 
+            # check args are right
+            if len(elems) != len(cmd["msg"].split(" ")):
+                print("incorrect usage")
+                continue
+
             # user gave a useful command, execute it 
-            func(elems[1:])
+            cmd["func"](elems[1:])
 
     def cmd_prizes_list(self, args):
         self.curs.execute(
