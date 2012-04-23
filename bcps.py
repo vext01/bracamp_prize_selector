@@ -55,7 +55,7 @@ def make_input_handler(display):
     def input_handler(inp):
         # start resolving
         if (inp == "enter"):
-            if not display.any_started:
+            if not display.started:
                 alarm_handler(None, (display, EventType.RESOLVE, 0))
             elif display.finished:
                 raise urwid.ExitMainLoop
@@ -82,14 +82,14 @@ class SuspenseDisplay:
             i = i + 1
         self.loop = None    # main event loop
         self.resolving = -1 # index of which item we are resolving
-        self.started = []
-        self.any_started = False
+        self.people_started = [] # XXX mex rename
+        self.started = False #
         self.finished = False
 
     def start(self, val):
         if val < len (self.people):
-            self.started.append(val)
-            self.any_started = True
+            self.people_started.append(val)
+            self.started = True
 
     def update(self):
         for p in self.people:
@@ -98,11 +98,11 @@ class SuspenseDisplay:
             self.loop.set_alarm_in(self.UPDATE_RATE, alarm_handler, (self, EventType.JUMBLE, None))
 
     def resolve_char(self, count):
-        for val in self.started:
+        for val in self.people_started:
             self.people[val].resolve_char()
             if self.people[val].fully_resolved():
-                self.started.remove(val)
-        if self.any_started and len(self.started) == 0:
+                self.people_started.remove(val)
+        if self.started and len(self.people_started) == 0:
             self.finished = True
 
         if (count % self.NEXT_DELAY) == 0:
