@@ -48,6 +48,19 @@ def alarm_handler(loop, data):
     elif event == EventType.RESOLVE:
         selector.resolve_char(val)
 
+# closure
+# this is not pretty, but urwid handler should have the option of passing 
+# user data down :(
+def make_input_handler(display):
+    def input_handler(inp):
+        # start resolving
+        if (inp == "enter"):
+            if not display.any_started:
+                alarm_handler(None, (display, EventType.RESOLVE, 0))
+            elif display.finished:
+                raise urwid.ExitMainLoop
+    return input_handler
+
 class EventType:
     JUMBLE=1
     RESOLVE=2
@@ -59,9 +72,10 @@ class SuspenseDisplay:
     START_DELAY = 2
     NEXT_DELAY = 4  # cycles stagger
 
-    def __init__(self, peep_list):
+    def __init__(self, parent, peep_list):
 
         self.people = []
+        self.parent = parent
         i = 0
         for p in peep_list:
             self.people.append(UplinkText(p, 20))
@@ -69,29 +83,30 @@ class SuspenseDisplay:
         self.loop = None    # main event loop
         self.resolving = -1 # index of which item we are resolving
         self.started = []
-        self.s = False
+        self.any_started = False
+        self.finished = False
 
     def start(self, val):
         if val < len (self.people):
             self.started.append(val)
-            self.s = True
-
+            self.any_started = True
 
     def update(self):
         for p in self.people:
             p.update()
-        self.loop.set_alarm_in(self.UPDATE_RATE, alarm_handler, (self, EventType.JUMBLE, None))
+        if not self.finished:
+            self.loop.set_alarm_in(self.UPDATE_RATE, alarm_handler, (self, EventType.JUMBLE, None))
 
     def resolve_char(self, count):
         for val in self.started:
             self.people[val].resolve_char()
             if self.people[val].fully_resolved():
                 self.started.remove(val)
-        if self.s and len(self.started) == 0:
-            raise urwid.ExitMainLoop
+        if self.any_started and len(self.started) == 0:
+            self.finished = True
 
         if (count % self.NEXT_DELAY) == 0:
-                self.start (count / self.NEXT_DELAY)
+                self.start(count / self.NEXT_DELAY)
         
         self.loop.set_alarm_in(self.RESOLVE_RATE, alarm_handler, (self, EventType.RESOLVE, count + 1))
 
@@ -105,10 +120,12 @@ class SuspenseDisplay:
             
         pile = urwid.Pile(widgets)
         fill = urwid.Filler(pile)
-        self.loop = urwid.MainLoop(fill)
+        self.loop = urwid.MainLoop(fill,
+                unhandled_input=make_input_handler(self))
 
         # start resolving after 10 seconds
-        self.loop.set_alarm_in(self.START_DELAY, alarm_handler, (self, EventType.RESOLVE, 0))
+        #self.loop.set_alarm_in(self.START_DELAY, alarm_handler, (self, EventType.RESOLVE, 0))
+        # start solving when enter is pressed via input_handler
 
         self.update()
         self.loop.run()
@@ -119,6 +136,7 @@ class PrizeSelector:
 
     def __init__(self):
         self.init_sql()
+        self.suspense_display = None # currently running suspense display inst
 
     def init_sql(self):
 
@@ -287,8 +305,10 @@ class PrizeSelector:
 
         names_only = [x[1] for x in lucky_people]
 
-        b = SuspenseDisplay(names_only)
-        b.render()
+        sd = SuspenseDisplay(self, names_only)
+        self.suspense_display = sd
+        sd.render()
+        self.suspense_display = None
 
         # XXX update db
 
