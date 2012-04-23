@@ -6,6 +6,8 @@ import time
 import sqlite3
 import os.path
 import os
+import readline
+
 
 from random import *
 rng = Random()
@@ -132,7 +134,24 @@ class PrizeSelector:
     DBNAME = "barcamp.db"
 
     def __init__(self):
+
+
+        cmds = {
+                "namesimport" :    { "func" : self.cmd_names_import,
+                                      "msg" : "names-import <file>"},
+                "nameslist" :      { "func" : self.cmd_names_list,
+                                      "msg" : "names-list"},
+                "prizesimport" :   { "func" : self.cmd_prizes_import,
+                                      "msg" : "prizes-import <file>"},
+                "prizeslist" :     { "func" : self.cmd_prizes_list,
+                                      "msg" : "prizes-list"},
+                "prizesissue" :    { "func" : self.cmd_prizes_issue,
+                                      "msg" : "prizes-issue <prizes-id> <qty>"}
+        };
         self.init_sql()
+        readline.set_completer(SimpleCompleter([a[0] for a in cmds.items()]).complete)
+        readline.parse_and_bind('tab: complete')
+        readline.parse_and_bind('set editing-mode vi')
 
     def init_sql(self):
 
@@ -153,29 +172,11 @@ class PrizeSelector:
 
     def prompt(self):
 
-        cmds = {
-                "names-import" :    { "func" : self.cmd_names_import,
-                                      "msg" : "names-import <file>"},
-                "names-list" :      { "func" : self.cmd_names_list,
-                                      "msg" : "names-list"},
-                "prizes-import" :   { "func" : self.cmd_prizes_import,
-                                      "msg" : "prizes-import <file>"},
-                "prizes-list" :     { "func" : self.cmd_prizes_list,
-                                      "msg" : "prizes-list"},
-                "prizes-issue" :    { "func" : self.cmd_prizes_issue,
-                                      "msg" : "prizes-issue <prizes-id> <qty>"}
-        };
 
         print("Type 'help' for usage instructions.")
 
         while (True):
-            sys.stdout.write("> ")
-            sys.stdout.flush()
-
-            try:
-                line = raw_input().strip()
-            except EOFError:
-                break
+            line = raw_input('> ')
 
             elems = line.split(" ")
 
@@ -325,6 +326,33 @@ class PrizeSelector:
 
     def close_sql(self):
         self.db.close()
+
+class SimpleCompleter(object):
+    
+    def __init__(self, options):
+        self.options = sorted(options)
+        return
+
+    def complete(self, text, state):
+        response = None
+        if state == 0:
+            # This is the first time for this text, so build a match list.
+            if text:
+                self.matches = [s 
+                                for s in self.options
+                                if s and s.startswith(text)]
+            else:
+                self.matches = self.options[:]
+
+        # Return the state'th item from the match list,
+        # if we have that many.
+        try:
+            response = self.matches[state]
+        except IndexError:
+            response = None
+
+        return response
+
 
 if __name__ == "__main__":
     ps = PrizeSelector()
