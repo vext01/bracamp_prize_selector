@@ -178,6 +178,7 @@ class PrizeSelector:
             print("Creating new database\n")
 
         self.db = sqlite3.connect(self.DBNAME)
+        self.db.text_factory = str
         self.curs = c = self.db.cursor()
 
         # make schema (if we need to)
