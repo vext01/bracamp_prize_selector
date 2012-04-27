@@ -7,7 +7,8 @@ import sqlite3
 import os.path
 import os
 import readline
-
+import time
+import shutil
 
 from random import *
 rng = Random()
@@ -314,7 +315,7 @@ class PrizeSelector:
         self.curs.execute("SELECT names.name_id, names.fname, names.lname, " + \
             "names.role, names.company, prizes.prize_id, prizes.descr " + \
             "FROM names,prizes WHERE names.prize_allocated = prizes.prize_id " + \
-            "AND prize_allocated > -1", ())
+            "AND prize_allocated > -1 ORDER BY prize_allocated", ())
         res = self.curs.fetchall()
 
         print("Names with prizes allocated:")
@@ -348,15 +349,16 @@ class PrizeSelector:
         try:
             lucky_people = self.choose_x_random_names(qty_going)
         except PeopleNumberError:
-            print("Too few people left (who are not staff)")
+            print("Too few people left")
             return
 
         names_only = [x[1] + " " + x[2] for x in lucky_people]
 
-        sd = SuspenseDisplay(self, names_only, res[0][1])
-        self.suspense_display = sd
-        sd.render()
-        self.suspense_display = None
+        # backup db
+        bkup_db_name = "barcamp-%s-before-%s.db" % \
+            (time.strftime("%Y%m%d-%H:%M"), res[0][1].replace(" ", "_"))
+        self.db.commit() # just incase
+        shutil.copyfile(self.DBNAME, bkup_db_name)
 
         # update db
         updates = [(pid, x[0]) for x in lucky_people]
@@ -367,6 +369,12 @@ class PrizeSelector:
             "quantity_allocated=quantity_allocated + ? WHERE " + \
             "prize_id=?", (qty_going, pid))
         self.db.commit()
+
+        # do pretty spinner
+        sd = SuspenseDisplay(self, names_only, res[0][1])
+        self.suspense_display = sd
+        sd.render()
+        self.suspense_display = None
 
     """ Choose random names that have not yet had a prize """
     def choose_x_random_names(self, x):
